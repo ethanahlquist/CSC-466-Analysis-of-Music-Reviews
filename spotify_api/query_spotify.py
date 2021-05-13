@@ -128,9 +128,7 @@ def main():
         count += 1
 
     # Export dataframe to csv
-    df.to_csv('first_five.csv', index=False)
-
-    # 'spotify_and_pitchfork.csv'
+    df.to_csv('spotify_and_pitchfork.csv', index=False)
 
     # Close the database
     con.close()
