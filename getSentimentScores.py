@@ -18,18 +18,30 @@ def getSentimentScores(s):
 def main():
     conn = sqlite3.connect('./data/pitchfork.sqlite')
 
-    query = "PRAGMA table_info(content);"
-    query = "SELECT reviewid, content FROM content;"
+    """
+    Get sentiment scores into a dataframe
+    """
+    #df_sentiments = df.apply(getSentimentScores, axis=1)
 
-    df = pd.read_sql_query(query, conn)
-
-    conn.close()
-
-    df_sentiments = df.apply(getSentimentScores, axis=1)
-
+    """
+    Export this dataframe to a csv
+    """
     # df_sentiments.to_csv("./data/sentiments.csv")
-    conn = sqlite3.connect('./data/sentiments.sqlite')
-    df_sentiments.to_sql("./data/sentiments.sqlite", conn)
+
+    """
+    Open the csv later, so scores are not reprocessed
+    """
+    df_sentiments = pd.read_csv("./data/sentiments.csv")
+
+    """
+    Add sentiment scores to the original pitchfork sql database
+    """
+    df_sentiments.to_sql('sentiment', con=conn, if_exists='append')
+
+    # Print table that was added
+    query = "select * from sentiment;"
+    df = pd.read_sql_query(query, conn)
+    print(df)
 
 
 if __name__ == "__main__":
