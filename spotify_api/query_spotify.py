@@ -53,22 +53,26 @@ def get_album_id(spotify, album, artist, api_calls):
     return None, api_calls
 
 def get_album_features(spotify, album_id, api_calls):
+    # Get album tracklist from album id
     results = spotify.album_tracks(album_id)
     api_calls += 1
+
+    # Add new features to album features dict
     album_features = {}
-    is_init = False
-    
-    # Sum the attributes
+    desired_features = ['Energy', 'Danceability', 'Happiness', 'Loudness', 
+        'Acousticness', 'Instrumentalness', 'Liveness', 'Speechiness', 'Key', 
+        'Tempo', 'Duration']
+    for feature in desired_features:
+        album_features[feature] = 0
+
+    # Sum the attributes of each song together in album_features dict
     for track in results['items']:
         track_id = track['id']
         track_features, api_calls = get_track_features(spotify, track_id, api_calls)
         for key in track_features:
-            if is_init == False:
-                album_features[key] = track_features[key]
-            else:
-                album_features[key] += track_features[key]
+            album_features[key] += track_features[key]
     
-    # Average the attributes
+    # Average the attributes in album_features dict
     for key in album_features:
         album_features[key] = album_features[key] / len(results['items'])
 
@@ -88,35 +92,32 @@ def main():
         'Tempo', 'Duration']
     df[desired_features] = ''
 
-    # Initialize counters
-    album_count = 1 # used to count number of albums we've gone through
-    api_calls = 0   # counts the total number of api calls so far
-    total_albums = df.shape[0] # total number of rows/albums in pitchfork data
-
-    # Get started with the data querying
+    count = 1
+    api_calls = 0
+    total_albums = df.shape[0]
     print(f"\nWe got {total_albums} albums to chug through!")
     start_time = time.time()
-
-    # This loop is where all of the api calls stem from
     for index, row in df.iterrows():
+
+        if count == 6:
+            break
+
         # Estimate the amount of time remaining
-        if album_count % 100 == 0:
+        if count % 100 == 0:
             end_time = time.time()
             time_spent = end_time - start_time
             seconds_per_album = time_spent / 100
-            albums_left = total_albums - album_count
+            albums_left = total_albums - count
             seconds_left = seconds_per_album * albums_left
             hours_left = seconds_left / 3600
-            # Print useful info
-            print(f"\n--------- {album_count}/{total_albums} albums done!! ({round(100*album_count/total_albums, 2)}%) ---------")
+            print(f"\n--------- {count}/{total_albums} albums done!! ({round(100*count/total_albums, 2)}%) ---------")
             print(f"--------- {api_calls} api calls made! ---------")
             print(f"--------- {hours_left} hours left!! ---------")
             start_time = time.time()
-            # Save the df to csv every 100 albums just in case a crash happens
             df.to_csv("spotify_and_pitchfork.csv", index=False)
 
         # Get the album id so we can search for album features
-        album_id, api_calls = get_album_id(spotify, row['title'], row['artist'], api_calls) # returns None if album not on Spotify
+        album_id, api_calls = get_album_id(spotify, row['title'], row['artist'], api_calls)
 
         # If the album exists on Spotify
         if album_id is not None:
@@ -124,13 +125,12 @@ def main():
             for feature in desired_features:
                 df.at[index, feature] = album_features[feature]
 
-        # Increment row/album counter
-        album_count += 1
+        count += 1
 
-    # Data gathering finished!!!
+    # Export dataframe to csv
+    df.to_csv('first_five.csv', index=False)
 
-    # Now export dataframe to csv
-    df.to_csv('pitchfork_spotify.csv', index=False)
+    # 'spotify_and_pitchfork.csv'
 
     # Close the database
     con.close()
