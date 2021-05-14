@@ -10,10 +10,11 @@ from requests.exceptions import ReadTimeout
 # export SPOTIPY_CLIENT_ID='98bd16fb0f01483aace2c3bf79f041a0'
 # export SPOTIPY_CLIENT_SECRET='8891a8f08d304b2fb1863d1c1df873c5'
 
+
 def get_track_features(spotify, track_id, api_calls):
-    desired_features = ['Energy', 'Danceability', 'Valence', 'Loudness', 
-    'Acousticness', 'Instrumentalness', 'Liveness', 'Speechiness', 'Key', 
-    'Tempo', 'Duration']
+    desired_features = ['Energy', 'Danceability', 'Valence', 'Loudness',
+                        'Acousticness', 'Instrumentalness', 'Liveness', 'Speechiness', 'Key',
+                        'Tempo', 'Duration']
 
     results = spotify.audio_features([track_id])
     api_calls += 1
@@ -28,6 +29,7 @@ def get_track_features(spotify, track_id, api_calls):
             track_features[feature] = results[0][feature.lower()]
 
     return track_features, api_calls
+
 
 def get_album_id(spotify, album, artist, api_calls):
     album = album.lower()
@@ -52,6 +54,7 @@ def get_album_id(spotify, album, artist, api_calls):
         return None, api_calls
     return None, api_calls
 
+
 def get_album_features(spotify, album_id, api_calls):
     # Get album tracklist from album id
     results = spotify.album_tracks(album_id)
@@ -59,37 +62,40 @@ def get_album_features(spotify, album_id, api_calls):
 
     # Add new features to album features dict
     album_features = {}
-    desired_features = ['Energy', 'Danceability', 'Happiness', 'Loudness', 
-        'Acousticness', 'Instrumentalness', 'Liveness', 'Speechiness', 'Key', 
-        'Tempo', 'Duration']
+    desired_features = ['Energy', 'Danceability', 'Happiness', 'Loudness',
+                        'Acousticness', 'Instrumentalness', 'Liveness', 'Speechiness', 'Key',
+                        'Tempo', 'Duration']
     for feature in desired_features:
         album_features[feature] = 0
 
     # Sum the attributes of each song together in album_features dict
     for track in results['items']:
         track_id = track['id']
-        track_features, api_calls = get_track_features(spotify, track_id, api_calls)
+        track_features, api_calls = get_track_features(
+            spotify, track_id, api_calls)
         for key in track_features:
             album_features[key] += track_features[key]
-    
+
     # Average the attributes in album_features dict
     for key in album_features:
         album_features[key] = album_features[key] / len(results['items'])
 
     return album_features, api_calls
 
+
 def main():
     # Read sqlite query results into a pandas DataFrame
-    con = sqlite3.connect("pitchfork.sqlite")
+    con = sqlite3.connect("../data/pitchfork.sqlite")
     df = pd.read_sql_query("SELECT * from reviews", con)
 
     # Boot up the spotify client
-    spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials(), requests_timeout=10, retries=10)
+    spotify = spotipy.Spotify(
+        auth_manager=SpotifyClientCredentials(), requests_timeout=10, retries=10)
 
     # Add new columns to dataframe
-    desired_features = ['Energy', 'Danceability', 'Happiness', 'Loudness', 
-        'Acousticness', 'Instrumentalness', 'Liveness', 'Speechiness', 'Key', 
-        'Tempo', 'Duration']
+    desired_features = ['Energy', 'Danceability', 'Happiness', 'Loudness',
+                        'Acousticness', 'Instrumentalness', 'Liveness', 'Speechiness', 'Key',
+                        'Tempo', 'Duration']
     df[desired_features] = ''
 
     count = 1
@@ -110,18 +116,21 @@ def main():
             albums_left = total_albums - count
             seconds_left = seconds_per_album * albums_left
             hours_left = seconds_left / 3600
-            print(f"\n--------- {count}/{total_albums} albums done!! ({round(100*count/total_albums, 2)}%) ---------")
+            print(
+                f"\n--------- {count}/{total_albums} albums done!! ({round(100*count/total_albums, 2)}%) ---------")
             print(f"--------- {api_calls} api calls made! ---------")
             print(f"--------- {hours_left} hours left!! ---------")
             start_time = time.time()
             df.to_csv("spotify_and_pitchfork.csv", index=False)
 
         # Get the album id so we can search for album features
-        album_id, api_calls = get_album_id(spotify, row['title'], row['artist'], api_calls)
+        album_id, api_calls = get_album_id(
+            spotify, row['title'], row['artist'], api_calls)
 
         # If the album exists on Spotify
         if album_id is not None:
-            album_features, api_calls = get_album_features(spotify, album_id, api_calls)
+            album_features, api_calls = get_album_features(
+                spotify, album_id, api_calls)
             for feature in desired_features:
                 df.at[index, feature] = album_features[feature]
 
@@ -132,6 +141,7 @@ def main():
 
     # Close the database
     con.close()
+
 
 if __name__ == '__main__':
     main()

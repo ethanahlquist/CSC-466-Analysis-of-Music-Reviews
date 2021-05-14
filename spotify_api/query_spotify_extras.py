@@ -3,6 +3,7 @@ Left over code from query_spotify that isn't used for anything anymore.
 I just want to keep it for reference.
 '''
 
+
 def get_track_id(spotify, title, artist, api_calls):
     title = title.lower()
     artist = artist.lower()
@@ -19,6 +20,7 @@ def get_track_id(spotify, title, artist, api_calls):
         if artist in artists and title == item['name'].lower():
             return item['id'], api_calls
     return None, api_calls
+
 
 def get_album_tracklist(spotify, album_id, api_calls):
     results = spotify.album_tracks(album_id)
@@ -44,3 +46,4 @@ def get_album_tracklist(spotify, album_id, api_calls):
 # album_id = get_album_id(spotify, album, artist)
 # album_features = get_album_features(spotify, album_id)
 # print(album_features)
+
