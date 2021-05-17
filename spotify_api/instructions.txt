@@ -1,0 +1,15 @@
+To get the data from the api:
+
+1. python3 ./query_spotify.py
+
+    - if this breaks during collection
+    - python3 ./query_spotify.py --continue
+
+2. clean data in csv (removing repeats, if any)
+    
+    - bash$ sort -g ../data/spotify_pitchfork.csv | uniq | sed '/[0-9]\+,,,,,,,,,,,,/d'
+    - sorts by index, removes duplicates and removes lines with no data.
+
+3. Import cleaned csv into the SQL data base
+
+    - python3 ./csvToSql.py
