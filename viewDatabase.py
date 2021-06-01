@@ -1,7 +1,6 @@
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
-from nltk.sentiment import SentimentIntensityAnalyzer
 
 sql_file = './data/pitchfork.sqlite'
 
