@@ -186,8 +186,6 @@ def main():
 
     print(f"\nWe got {total_albums} albums to chug through!")
 
-    # for x in np.split(df_pitchfork, np.arange(5, len(df_pitchfork), 5)):
-
     argv = sys.argv[1:]
     opts, args = getopt.getopt(argv, 'ci:', longopts=["continue", "index="])
 
@@ -196,7 +194,6 @@ def main():
     for o, a in opts:
         if o in ("-c", "--continue"):
             past_df = pd.read_csv(outfile_csv, index_col=0)
-            # print(past_df.iloc[-1].name)
             print(past_df.last_valid_index())
             start_index = past_df.last_valid_index()
             count = past_df.last_valid_index()
